@@ -10,7 +10,9 @@ import timeit
 import sqlite3
 import pandas as pd
 
-
+# from ast import literal_eval
+#
+# python_dict = literal_eval("{'a': 1}")
 
 class Monitor():
     def __init__(self, table_name='times'):
@@ -19,17 +21,19 @@ class Monitor():
         self.table_name = table_name
 
     def create_table(self):
+        # varchar = 1 billion bytes1 billion bytes
         query = f"""
         CREATE TABLE IF NOT EXISTS {self.table_name}
-        (filename VARCHAR(20), 
+        (main_filename VARCHAR(20), 
          function VARCHAR(20),
-         time_elapsed VARCHAR(20)
+         time_elapsed VARCHAR(20),
+         traceback VARCHAR 
         );"""
 
         self.conn.execute(query)
 
     def insert_row(self, rows):
-        stmt = f"INSERT INTO {self.table_name} VALUES(?, ?, ?)"
+        stmt = f"INSERT INTO {self.table_name} VALUES(?, ?, ?, ?)"
         self.conn.executemany(stmt, rows)
         self.conn.commit()
 
@@ -65,7 +69,8 @@ class Monitor():
         else:
             self.time_elapsed = timeit.default_timer() - start_time
             # insert into the database
-            row = [(self.name, self.name, self.time_elapsed)]
+            tb = self.stack.__str__()
+            row = [('monitor.py', self.name, self.time_elapsed, tb)]
             self.insert_row(row)
             print(self.show_all_table())
 
@@ -73,7 +78,6 @@ class Monitor():
 my_monitor = Monitor()
 my_monitor.drop_all_table()
 my_monitor.create_table()
-
 
 def funcion_1():
     print('hello funcion_1')
